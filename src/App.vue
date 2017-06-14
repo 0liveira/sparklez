@@ -1,124 +1,144 @@
 <template>
-<div id="app">
-	<div v-if="!connection.active">
-		<el-row :gutter="20">
-			<el-col :sm="6" :lg="4">
-				<div class="sidebar">
-					<el-menu mode="vertical">
-						<el-menu-item v-for="(favorite, key) in favorites" :key="key" :index="key + ''" @click="setFavorite(favorite)">
-							<i class="fa fa-fw fa-database"></i>
-							<span v-text="favorite.name"></span>
-							<i class="fa fa-fw fa-times" @click.stop="removeFavorite(key)"></i>
-						</el-menu-item>
+	<div id="app">
+		<div v-if="!connection.active">
+			<el-row :gutter="20">
+				<el-col :sm="6" :lg="4">
+					<div class="sidebar">
+						<el-menu mode="vertical">
+							<el-menu-item v-for="(favorite, key) in favorites"
+							:key="key"
+							:index="key + ''"
+							@click="setFavorite(favorite)"
+							>
+								<i class="fa fa-fw fa-database"></i>
+								<span v-text="favorite.name"></span>
+								<i class="fa fa-fw fa-times" @click.stop="removeFavorite(key)"></i>
 
-						<!-- @TODO: folder feature -->
-						<!-- <el-submenu index="2">
-									<template slot="title"><i class="fa fa-fw fa-folder"></i> Development
-								</template>
-									<el-menu-item index="2-1"><i class="fa fa-fw fa-database"></i> localhost</el-menu-item>
+							</el-menu-item>
+
+							<!-- @TODO: folder feature -->
+							<!-- <el-submenu index="2">
+								<template slot="title"><i class="fa fa-fw fa-folder"></i> Development</template>
+								<el-menu-item index="2-1"><i class="fa fa-fw fa-database"></i>localhost</el-menu-item>
 								</el-submenu> -->
-					</el-menu>
-				</div>
+						</el-menu>
+					</div>
+				</el-col>
+
+				<el-col :sm="{span: 12, offset: 3}" :lg="{span: 10, offset: 5}">
+					<h2>Connection</h2>
+
+					<el-form :model="connection" :rules="rules" ref="connection">
+						<el-form-item>
+							<el-input placeholder="localhost" v-model="connection.name" name="name">
+								<template slot="prepend"><i class="fa fa-fw fa-tag"></i>Name</template>
+							</el-input>
+						</el-form-item>
+
+						<el-form-item>
+							<el-input placeholder="127.0.0.1" v-model="connection.host" name="host">
+								<template slot="prepend"><i class="fa fa-fw fa-server"></i>Host</template>
+							</el-input>
+						</el-form-item>
+
+						<el-form-item>
+							<el-input placeholder="3306" v-model="connection.port" name="port">
+								<template slot="prepend"><i class="fa fa-fw fa-random"></i>Port</template>
+							</el-input>
+						</el-form-item>
+
+						<el-form-item>
+							<el-input placeholder="root" v-model="connection.user" name="user">
+								<template slot="prepend"><i class="fa fa-fw fa-user"></i>User</template>
+							</el-input>
+						</el-form-item>
+
+						<el-form-item
+							prop="password">
+								<el-input
+								placeholder="secret"
+								type="password"
+								v-model="connection.password"
+								name="password">
+									<template slot="prepend"><i class="fa fa-fw fa-lock"></i>Password</template>
+								</el-input>
+						</el-form-item>
+
+						<el-form-item>
+							<el-input placeholder="development" v-model="connection.database">
+								<template slot="prepend">
+										<i class="fa fa-fw fa-database"></i>
+										Database
+								</template>
+							</el-input>
+						</el-form-item>
+
+						<el-form-item>
+							<el-button-group>
+								<el-button
+									type="primary"
+									@click="saveAsFavorite()">
+									<i class="fa fa-fw fa-star"></i> Save as favorite
+								</el-button>
+
+								<el-button
+									type="primary"
+									@click="testConnection()">
+									<i class="fa fa-fw fa-bolt"></i> Test connection
+								</el-button>
+
+								<el-button
+									type="primary"
+									@click="connect()">
+									<i class="fa fa-fw fa-plug"></i> Connect
+								</el-button>
+							</el-button-group>
+						</el-form-item>
+					</el-form>
+				</el-col>
+			</el-row>
+		</div>
+
+		<el-row v-else>
+			<el-col :span="4">
+				<el-menu class="has-full-height" @select="changeTableActive">
+
+					<li class="el-menu-item">
+
+						<el-select
+							v-model="databaseActive"
+							@input="loadTables"
+							filterable
+							placeholder="Select database">
+
+							<el-option
+								v-for="database in databases"
+								:key="database"
+								:label="database"
+								 :value="database">
+							</el-option>
+						</el-select>
+					</li>
+					<li class="el-menu-item">
+						<el-input
+						v-model="tableFilter"
+						placeholder="Filter">
+					</el-input>
+					</li>
+					<el-menu-item
+						v-for="table in tablesFiltered"
+						:key="table"
+						:index="table"
+						v-text="table">
+					</el-menu-item>
+				</el-menu>
 			</el-col>
 
-			<el-col :sm="{span: 12, offset: 3}" :lg="{span: 10, offset: 5}">
-				<h2>Connection</h2>
-
-				<el-form :model="connection" :rules="rules" ref="connection">
-					<el-form-item>
-						<el-input placeholder="localhost" v-model="connection.name" name="name">
-							<template slot="prepend">
-									<i class="fa fa-fw fa-tag"></i>
-									Name
-							</template>
-						</el-input>
-					</el-form-item>
-
-					<el-form-item>
-						<el-input placeholder="127.0.0.1" v-model="connection.host" name="host">
-							<template slot="prepend">
-									<i class="fa fa-fw fa-server"></i>
-									Host
-							</template>
-						</el-input>
-					</el-form-item>
-
-					<el-form-item>
-						<el-input placeholder="3306" v-model="connection.port" name="port">
-							<template slot="prepend">
-									<i class="fa fa-fw fa-random"></i>
-									Port
-							</template>
-						</el-input>
-					</el-form-item>
-
-					<el-form-item>
-						<el-input placeholder="root" v-model="connection.user" name="user">
-							<template slot="prepend">
-									<i class="fa fa-fw fa-user"></i>
-									User
-							</template>
-						</el-input>
-					</el-form-item>
-
-					<el-form-item prop="password">
-						<el-input placeholder="secret" type="password" v-model="connection.password" name="password">
-							<template slot="prepend">
-									<i class="fa fa-fw fa-lock"></i>
-									Password
-							</template>
-						</el-input>
-					</el-form-item>
-
-					<el-form-item>
-						<el-input placeholder="development" v-model="connection.database">
-							<template slot="prepend">
-									<i class="fa fa-fw fa-database"></i>
-									Database
-							</template>
-						</el-input>
-					</el-form-item>
-
-					<el-form-item>
-						<el-button-group>
-							<el-button type="primary" @click="saveAsFavorite()">
-								<i class="fa fa-fw fa-star"></i> Save as favorite
-							</el-button>
-
-							<el-button type="primary" @click="testConnection()">
-								<i class="fa fa-fw fa-bolt"></i> Test connection
-							</el-button>
-
-							<el-button type="primary" @click="connect()">
-								<i class="fa fa-fw fa-plug"></i> Connect
-							</el-button>
-						</el-button-group>
-					</el-form-item>
-				</el-form>
+			<el-col :span="20">
+				<app-explorer></app-explorer>
 			</el-col>
 		</el-row>
 	</div>
-
-	<el-row v-else>
-		<el-col :span="4">
-			<el-menu class="has-full-height" @select="changeTableActive">
-				<li class="el-menu-item">
-					<el-select v-model="databaseActive" @input="loadTables" filterable placeholder="Select database">
-						<el-option v-for="database in databases" :key="database" :label="database" :value="database"></el-option>
-					</el-select>
-				</li>
-				<li class="el-menu-item">
-					<el-input v-model="tableFilter" placeholder="Filter"></el-input>
-				</li>
-				<el-menu-item v-for="table in tablesFiltered" :key="table" :index="table" v-text="table"></el-menu-item>
-			</el-menu>
-		</el-col>
-
-		<el-col :span="20">
-			<app-explorer></app-explorer>
-		</el-col>
-	</el-row>
-</div>
 </template>
 
 <script>
@@ -136,10 +156,6 @@ export default {
 
 	components: {
 		'app-explorer': componentAsync.asyncComp(AppExplorer),
-	},
-
-	props: {
-		teste: String
 	},
 
 	data: () => ({
@@ -160,7 +176,7 @@ export default {
 		tablesFiltered() {
 			return this.tables.filter(
 				table =>
-				!this.tableFilter || table.indexOf(this.tableFilter) !== -1
+					!this.tableFilter || table.indexOf(this.tableFilter) !== -1
 			)
 		},
 	},
@@ -247,8 +263,6 @@ export default {
 		connect() {
 			this.testConnection()
 				.then(() => {
-					this.knex = this.getKnex()
-
 					this.updatePropertyConnection({
 						property: 'active',
 						value: true
@@ -291,7 +305,7 @@ export default {
 				})
 
 				this.setDatabaseActive(this.connection.database)
-				if (this.databases.includes(this.connection.database)) this.loadTables(this.connection.database);
+				if (this.databases.includes(this.connection.database)) this.loadTables(this.connection.database)
 			})
 		},
 
