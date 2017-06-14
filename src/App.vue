@@ -315,9 +315,7 @@ export default {
 			this.knex
 				.select('table_name')
 				.from('information_schema.tables')
-				.where({
-					table_schema: database
-				})
+				.where({ table_schema: database })
 				.pluck('table_name')
 				.then(tables => {
 					this.tables = tables

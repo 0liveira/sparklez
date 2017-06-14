@@ -3,7 +3,7 @@ import Knex from 'knex'
 export default {
     namespaced : true,
 
-    state : {
+    state: {
         knex: null,
         connection: {
             name: '',
@@ -24,7 +24,7 @@ export default {
         queryLog: []
     },
 
-    getters : {
+    getters: {
         knex: state => state.knex,
         connection: state => state.connection,
         databaseActive: state => state.databaseActive,
@@ -35,58 +35,40 @@ export default {
         queryLog: state => state.queryLog
     },
 
-    actions : {
-        setKnex({
-            commit
-        }, payload) {
+    actions: {
+        setKnex({ commit }, payload) {
             commit('SET_KNEX', payload)
         },
 
-        setConnection({
-            commit
-        }, payload) {
+        setConnection({ commit }, payload) {
             commit('SET_CONNECTION', payload)
         },
 
-        setDatabaseActive({
-            commit
-        }, payload) {
+        setDatabaseActive({ commit }, payload) {
             commit('SET_DATABASE_ACTIVE', payload)
         },
 
-        setTableActive({
-            commit
-        }, payload) {
+        setTableActive({ commit }, payload) {
             commit('SET_TABLE_ACTIVE', payload)
         },
 
-        setTableCount({
-            commit
-        }, payload) {
+        setTableCount({ commit }, payload) {
             commit('SET_TABLE_COUNT', payload)
         },
 
-        setTableColumns({
-            commit
-        }, payload) {
+        setTableColumns({ commit }, payload) {
             commit('SET_TABLE_COLUMNS', payload)
         },
 
-        setTableData({
-            commit
-        }, payload) {
+        setTableData({ commit }, payload) {
             commit('SET_TABLE_DATA', payload)
         },
 
-        setQueryLog({
-            commit
-        }, payload) {
+        setQueryLog({ commit }, payload) {
             commit('SET_QUERY_LOG', payload)
         },
 
-        updatePropertyConnection({
-            commit
-        }, payload) {
+        updatePropertyConnection({ commit }, payload) {
             commit('UPDATE_CONNECTION_PROPERTY', payload)
         },
 
@@ -95,7 +77,7 @@ export default {
         }
     },
 
-    mutations : {
+    mutations: {
         SET_KNEX(state, payload) {
             state.knex = payload
         },

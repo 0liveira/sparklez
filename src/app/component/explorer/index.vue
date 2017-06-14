@@ -1,136 +1,188 @@
 <template>
-<div class="explorer has-full-height">
-	<div class="explorer__header">
-		<el-button-group>
-			<el-button type="primary" icon="plus" @click="createRow()">
-				Create
-			</el-button>
+    <div class="explorer has-full-height">
+        <div class="explorer__header">
+            <el-button-group>
+                <el-button
+                    type="primary"
+                    icon="plus"
+                    @click="createRow()"
+                >
+                    Create
+                </el-button>
 
-			<el-button type="primary" icon="edit" :disabled="rowsSelected.length !== 1" @click="openRow(tableData[rowsSelected[0]])">
-				Edit
-			</el-button>
+                <el-button
+                    type="primary"
+                    icon="edit"
+                    :disabled="rowsSelected.length !== 1"
+                    @click="openRow(tableData[rowsSelected[0]])"
+                >
+                    Edit
+                </el-button>
 
-			<el-button type="primary" icon="delete" :disabled="rowsSelected.length === 0" @click="deleteRows()">
-				Delete
-			</el-button>
-		</el-button-group>
+                <el-button
+                    type="primary"
+                    icon="delete"
+                    :disabled="rowsSelected.length === 0"
+                    @click="deleteRows()"
+                >
+                    Delete
+                </el-button>
+            </el-button-group>
 
-		<el-button type="info" @click="loadTable()">
-			<i class="fa fa-fw fa-refresh"></i> Refresh
-		</el-button>
+            <el-button type="info" @click="loadTable()">
+                <i class="fa fa-fw fa-refresh"></i> Refresh
+            </el-button>
 
-		<el-button type="warning" @click="disconnect()">
-			<i class="fa fa-fw fa-power-off"></i> Disconnect
-		</el-button>
-	</div>
+            <el-button type="warning" @click="disconnect()">
+                <i class="fa fa-fw fa-power-off"></i> Disconnect
+            </el-button>
+        </div>
 
-	<el-tabs class="explorer__content">
-		<el-tab-pane>
-			<span slot="label">
-					<i class="fa fa-fw fa-file-text"></i>
-					Content
-				</span>
+        <el-tabs class="explorer__content">
+            <el-tab-pane>
+                <span slot="label">
+                    <i class="fa fa-fw fa-file-text"></i> Content
+                </span>
 
-			<div>
-				<el-form :inline="true" :model="filter">
-					<el-form-item>
-						<el-select v-model="filter.column" placeholder="Column">
-							<el-option v-for="(column, key) in tableColumns" :key="key" :label="column.column_name" :value="column.column_name"></el-option>
-						</el-select>
-					</el-form-item>
+                <div>
+                    <el-form :inline="true" :model="filter">
+                        <el-form-item>
+                            <el-select v-model="filter.column" placeholder="Column">
+                                <el-option
+                                    v-for="(column, key) in tableColumns"
+                                    :key="key"
+                                    :label="column.column_name"
+                                    :value="column.column_name">
+                                </el-option>
+                            </el-select>
+                        </el-form-item>
 
-					<el-form-item>
-						<el-select v-model="filter.operator" placeholder="Operator">
-							<el-option v-for="(filter, key) in filter.operators" :key="key" :label="filter" :value="filter"></el-option>
-						</el-select>
-					</el-form-item>
+                        <el-form-item>
+                            <el-select v-model="filter.operator" placeholder="Operator">
+                                <el-option
+                                    v-for="(filter, key) in filter.operators"
+                                    :key="key"
+                                    :label="filter"
+                                    :value="filter"
+                                ></el-option>
+                            </el-select>
+                        </el-form-item>
 
-					<el-form-item>
-						<el-input v-model="filter.value" placeholder="Value" :disabled="filterOperatorValue"></el-input>
-					</el-form-item>
+                        <el-form-item>
+                            <el-input
+                                v-model="filter.value"
+                                placeholder="Value"
+                                :disabled="filterOperatorValue"
+                            ></el-input>
+                        </el-form-item>
 
-					<el-form-item>
-						<el-button type="primary" @click="loadTableData()">Filter</el-button>
-					</el-form-item>
+                        <el-form-item>
+                            <el-button type="primary" @click="loadTableData()">Filter</el-button>
+                        </el-form-item>
 
-					<el-form-item>
-						<el-button type="warning" @click="resetFilterAndReload()">Reset Filter</el-button>
-					</el-form-item>
-				</el-form>
+                        <el-form-item>
+                            <el-button type="warning" @click="resetFilterAndReload()">Reset Filter</el-button>
+                        </el-form-item>
+                    </el-form>
 
-				<div id="table-content">
-					<el-pagination layout="sizes, total, prev, pager, next, jumper" :page-sizes="paginateSizes" :page-size="paginateNumber" :total="tableCount" @size-change="setPaginateNumber($event)" @current-change="setPaginatePage($event)"></el-pagination>
-					<br>
-					<div class="el-table">
-						<table class="el-table__body" cellspacing="0" cellpadding="0">
-							<thead>
-								<tr>
-									<th v-for="(column, key) in tableColumns" :key="key">
-										<div class="cell" v-text="column.column_name"></div>
-									</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr v-for="(row, key) in tableData" :key="key" :class="{'current-row': isRowSelected(key)}" @dblclick="openRow(row)" @click="toggleRow(key)">
-									<td v-for="(column, key) in tableColumns" :key="key">
-										<!-- @TODO: maybe create a class for each data type to customize -->
-										<div class="cell" :class="{ 'is-nowrap': column.data_type === 'timestamp' }">
-											{{ row[column.column_name] | str_limit }}
-										</div>
-									</td>
-								</tr>
-							</tbody>
-						</table>
+                    <div id="table-content">
+                        <el-pagination
+                            layout="sizes, total, prev, pager, next, jumper"
+                            :page-sizes="paginateSizes"
+                            :page-size="paginateNumber"
+                            :total="tableCount"
+                            @size-change="setPaginateNumber($event)"
+                            @current-change="setPaginatePage($event)"
+                        ></el-pagination>
+                        <br>
+                        <div class="el-table">
+                            <table class="el-table__body" cellspacing="0" cellpadding="0">
+                                <thead>
+                                    <tr>
+                                        <th v-for="(column, key) in tableColumns" :key="key">
+                                            <div class="cell" v-text="column.column_name"></div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr
+                                        v-for="(row, key) in tableData"
+                                        :key="key"
+                                        :class="{'current-row': isRowSelected(key)}"
+                                        @dblclick="openRow(row)"
+                                        @click="toggleRow(key)"
+                                    >
+                                        <td v-for="(column, key) in tableColumns" :key="key">
+                                            <!-- @TODO: maybe create a class for each data type to customize -->
+                                            <div
+                                                class="cell"
+                                                :class="{ 'is-nowrap': column.data_type === 'timestamp' }"
+                                            >
+                                                {{ row[column.column_name] | str_limit }}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
 
-						<div class="el-table__empty-block" v-if="tableData.length === 0">
-							<span class="el-table__empty-text">No result</span>
-						</div>
-					</div>
-				</div>
+                            <div class="el-table__empty-block" v-if="tableData.length === 0">
+                                <span class="el-table__empty-text">No result</span>
+                            </div>
+                        </div>
+                    </div>
 
-				<el-dialog :visible.sync="showDialogEdit" title="Edit Row" @close="setRowActive(null)">
-					<el-form v-if="hasRowActive" :model="rowForm">
-						<el-form-item v-for="column in tableColumns" :key="column.column_name" :label="column.column_name">
+                    <el-dialog
+                        :visible.sync="showDialogEdit"
+                        title="Edit Row"
+                        @close="setRowActive(null)"
+                    >
+                        <el-form
+                            v-if="hasRowActive"
+                            :model="rowForm"
+                        >
+                            <el-form-item
+                                v-for="column in tableColumns"
+                                :key="column.column_name"
+                                :label="column.column_name">
 
-							<el-input v-model="rowForm[column.column_name]"></el-input>
-						</el-form-item>
-					</el-form>
-					<div slot="footer" class="dialog-footer">
-						<el-button @click="setRowActive(null)">Cancel</el-button>
-						<el-button type="primary" @click="submitRow(rowActive)">Confirm</el-button>
-					</div>
-				</el-dialog>
-			</div>
-		</el-tab-pane>
+                                <el-input
+                                    v-model="rowForm[column.column_name]"
+                                ></el-input>
+                            </el-form-item>
+                        </el-form>
+                        <div slot="footer" class="dialog-footer">
+                            <el-button @click="setRowActive(null)">Cancel</el-button>
+                            <el-button type="primary" @click="submitRow(rowActive)">Confirm</el-button>
+                        </div>
+                    </el-dialog>
+                </div>
+            </el-tab-pane>
 
-		<el-tab-pane>
-			<span slot="label">
-					<i class="fa fa-fw fa-table"></i>
-					Structure
-				</span>
+            <el-tab-pane>
+                <span slot="label">
+                    <i class="fa fa-fw fa-table"></i> Structure
+                </span>
 
-			<app-structure></app-structure>
-		</el-tab-pane>
+                <app-structure></app-structure>
+            </el-tab-pane>
 
-		<el-tab-pane>
-			<span slot="label">
-					<i class="fa fa-fw fa-terminal"></i>
-					Query
-				</span>
+            <el-tab-pane>
+                <span slot="label">
+                    <i class="fa fa-fw fa-terminal"></i> Query
+                </span>
 
-			<app-query></app-query>
-		</el-tab-pane>
+                <app-query></app-query>
+            </el-tab-pane>
 
-		<el-tab-pane>
-			<span slot="label">
-					<i class="fa fa-fw fa-list"></i>
-					Query Log
-				</span>
+            <el-tab-pane>
+                <span slot="label">
+                    <i class="fa fa-fw fa-list"></i> Query Log
+                </span>
 
-			<app-query-log></app-query-log>
-		</el-tab-pane>
-	</el-tabs>
-</div>
+                <app-query-log></app-query-log>
+            </el-tab-pane>
+        </el-tabs>
+    </div>
 </template>
 
 <script>
@@ -209,14 +261,8 @@ export default {
 		},
 
 		disconnect() {
-			this.updatePropertyConnection({
-				property: 'active',
-				value: false
-			})
-			this.updatePropertyConnection({
-				property: 'tested',
-				value: false
-			})
+			this.updatePropertyConnection({ property: 'active', value: false })
+			this.updatePropertyConnection({ property: 'tested', value: false })
 			this.setKnex(null)
 
 			this.resetData()
@@ -308,10 +354,10 @@ export default {
 			}
 
 			switch (this.filter.operator) {
-			case 'IS NULL':
-				return query.whereNull(this.filter.column)
-			case 'IS NOT NULL':
-				return query.whereNotNull(this.filter.column)
+				case 'IS NULL':
+					return query.whereNull(this.filter.column)
+				case 'IS NOT NULL':
+					return query.whereNotNull(this.filter.column)
 			}
 
 			if (!this.filter.value) {
@@ -357,9 +403,9 @@ export default {
 			let query = this.prepareQuery()
 			console.log(this.rowForm)
 			console.log(this.rowType)
-			this.rowType == 'update' ?
-				query.where(this.rowActive).update(this.rowForm) :
-				query.insert(this.rowForm)
+			this.rowType == 'update'
+				? query.where(this.rowActive).update(this.rowForm)
+				: query.insert(this.rowForm)
 
 			query
 				.then(success => {
@@ -397,13 +443,13 @@ export default {
 				})
 				.then(
 					result =>
-					new Promise(resolve => {
-						this.successMessage(
-							`${result.length} Row(s) deleted.`
-						)
-						this.loadTable()
+						new Promise(resolve => {
+							this.successMessage(
+								`${result.length} Row(s) deleted.`
+							)
+							this.loadTable()
 
-						resolve()
+							resolve()
 					})
 				)
 				.catch(error => {
@@ -445,8 +491,7 @@ export default {
             width: auto;
         }
 
-        .el-table::after,
-        .el-table::before {
+        .el-table::after, .el-table::before {
             display: none;
         }
 
